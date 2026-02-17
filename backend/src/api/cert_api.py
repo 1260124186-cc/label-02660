@@ -49,6 +49,7 @@ async def upload_files(files: list[UploadFile] = File(...)):
         if ext not in {".pdf", ".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif"}:
             continue
         save_path = os.path.join(batch_dir, f.filename)
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
         with open(save_path, "wb") as fp:
             content = await f.read()
             fp.write(content)

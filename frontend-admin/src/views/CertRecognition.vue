@@ -18,7 +18,22 @@
       <div class="card">
         <div class="card-title">
           <el-icon><FolderOpened /></el-icon>上传证书文件
+          <div class="title-actions">
+            <el-button type="primary" size="small" @click="selectFolder">
+              选择文件夹
+            </el-button>
+          </div>
         </div>
+        <!-- 隐藏的文件夹选择 input -->
+        <input
+          ref="folderInputRef"
+          type="file"
+          webkitdirectory
+          multiple
+          style="display: none"
+          accept=".pdf,.jpg,.jpeg,.png,.bmp,.tiff,.tif"
+          @change="onFolderSelect"
+        />
         <el-upload
           ref="uploadRef"
           class="upload-area"
@@ -35,10 +50,23 @@
           </div>
           <template #tip>
             <div class="el-upload__tip">
-              支持 PDF / JPG / PNG / BMP / TIFF 格式，可批量上传
+              支持 PDF / JPG / PNG / BMP / TIFF 格式，可批量上传，也可点击上方按钮选择整个文件夹
             </div>
           </template>
         </el-upload>
+        <!-- 文件夹选择后的文件列表 -->
+        <div v-if="folderFiles.length > 0" class="folder-file-list">
+          <div class="folder-header">
+            <span>已从文件夹选择 {{ folderFiles.length }} 个文件</span>
+            <el-button size="small" type="danger" link @click="clearFolderFiles">清除</el-button>
+          </div>
+          <div v-for="(f, idx) in folderFiles.slice(0, 10)" :key="idx" class="folder-file-item">
+            {{ f.name }}
+          </div>
+          <div v-if="folderFiles.length > 10" class="folder-file-item" style="color: #94a3b8;">
+            ... 还有 {{ folderFiles.length - 10 }} 个文件
+          </div>
+        </div>
       </div>
 
       <!-- 输出设置 -->
@@ -63,20 +91,20 @@
           size="large"
           :icon="CaretRight"
           :loading="certStore.processing"
-          :disabled="fileList.length === 0"
+          :disabled="totalFileCount === 0"
           @click="startProcess"
         >
           {{ certStore.processing ? '正在识别中...' : '开始整理' }}
         </el-button>
         <el-button
           size="large"
-          :disabled="fileList.length === 0"
+          :disabled="totalFileCount === 0"
           @click="resetAll"
         >
           重置
         </el-button>
-        <span v-if="fileList.length > 0" class="file-count">
-          已选择 {{ fileList.length }} 个文件
+        <span v-if="totalFileCount > 0" class="file-count">
+          已选择 {{ totalFileCount }} 个文件
         </span>
       </div>
     </div>
@@ -146,16 +174,21 @@ import { CaretRight, Download } from '@element-plus/icons-vue'
 import { useCertStore } from '@/stores/cert'
 import { downloadResult } from '@/api/cert'
 
+const VALID_EXTS = ['.pdf', '.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif']
+
 const certStore = useCertStore()
 const uploadRef = ref(null)
+const folderInputRef = ref(null)
 const activeTab = ref('upload')
 const fileList = ref([])
+const folderFiles = ref([])
 
 const form = ref({
   writeMode: 'overwrite',
 })
 
 const hasResults = computed(() => certStore.results.length > 0)
+const totalFileCount = computed(() => fileList.value.length + folderFiles.value.length)
 
 function onFileChange(file, list) {
   fileList.value = list
@@ -165,16 +198,46 @@ function onFileRemove(file, list) {
   fileList.value = list
 }
 
+function selectFolder() {
+  folderInputRef.value.click()
+}
+
+function onFolderSelect(e) {
+  const files = Array.from(e.target.files || [])
+  const validFiles = files.filter(f => {
+    const ext = '.' + f.name.split('.').pop().toLowerCase()
+    return VALID_EXTS.includes(ext)
+  })
+  if (validFiles.length === 0) {
+    ElMessage.warning('所选文件夹中没有支持的证书文件')
+    return
+  }
+  folderFiles.value = validFiles
+  ElMessage.success(`已从文件夹选择 ${validFiles.length} 个证书文件`)
+  // 重置 input 以便再次选择同一文件夹
+  e.target.value = ''
+}
+
+function clearFolderFiles() {
+  folderFiles.value = []
+}
+
 async function startProcess() {
-  if (fileList.value.length === 0) {
+  if (totalFileCount.value === 0) {
     ElMessage.warning('请先上传证书文件')
     return
   }
 
   try {
+    // 合并两种来源的文件
+    const allFiles = [
+      ...fileList.value,
+      ...folderFiles.value.map(f => ({ raw: f, name: f.name })),
+    ]
+
     // 1. 上传
     ElMessage.info('正在上传文件...')
-    await certStore.upload(fileList.value)
+    await certStore.upload(allFiles)
     ElMessage.success(`已上传 ${certStore.uploadedFiles.length} 个文件`)
 
     // 2. 处理
@@ -200,6 +263,7 @@ function downloadExcel() {
 function resetAll() {
   certStore.reset()
   fileList.value = []
+  folderFiles.value = []
   if (uploadRef.value) {
     uploadRef.value.clearFiles()
   }
@@ -230,6 +294,27 @@ function resetAll() {
     font-size: 13px;
     padding: 4px 0;
     border-bottom: 1px solid #fef2f2;
+  }
+  .folder-file-list {
+    margin-top: 12px;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+  }
+  .folder-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+  }
+  .folder-file-item {
+    font-size: 12px;
+    color: #64748b;
+    padding: 2px 0;
   }
 }
 </style>

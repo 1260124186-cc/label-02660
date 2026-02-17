@@ -184,10 +184,10 @@ class CertProcessor:
         return cert_info
 
     def _scan_files(self, folder: Path) -> List[Path]:
-        """扫描文件夹中的可处理文件"""
+        """扫描文件夹中的可处理文件（递归子目录）"""
         files = []
         all_exts = SUPPORTED_IMAGE_EXTS | {SUPPORTED_PDF_EXT}
-        for f in sorted(folder.iterdir()):
+        for f in sorted(folder.rglob("*")):
             if f.is_file() and f.suffix.lower() in all_exts:
                 files.append(f)
         logger.info(f"扫描到 {len(files)} 个可处理文件")
