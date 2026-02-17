@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cert-ocr-backend
+    restart: unless-stopped
+    ports:
+      - "8083:8000"
+    volumes:
+      - backend-output:/app/output
+      - backend-upload:/app/upload
+      - backend-logs:/app/logs
+    environment:
+      - TZ=Asia/Shanghai
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend-admin:
+    build:
+      context: ./frontend-admin
+      dockerfile: Dockerfile
+    container_name: cert-ocr-frontend
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    depends_on:
+      - backend
+    environment:
+      - TZ=Asia/Shanghai
+
+volumes:
+  backend-output:
+  backend-upload:
+  backend-logs:

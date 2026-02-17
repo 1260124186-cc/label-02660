@@ -1,0 +1,68 @@
+# 通用证书模板 - 默认模板
+name: general
+description: 通用比赛证书识别模板，适用于大多数标准格式证书
+cert_type: general
+keywords:
+  - 证书
+  - 获奖
+  - 荣誉
+  - 比赛
+  - 竞赛
+
+fields:
+  award_date:
+    patterns:
+      - '(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日'
+      - '(\d{4})\s*年\s*(\d{1,2})\s*月'
+      - '(\d{4})[-/](\d{1,2})[-/](\d{1,2})'
+      - '(\d{4})[-/](\d{1,2})'
+    region: null
+    priority: 1
+
+  award_name:
+    patterns:
+      - '荣获["\u201c\u201d]?\s*(.+?)\s*["\u201c\u201d]?\s*(?:奖|称号)'
+      - '获得["\u201c\u201d]?\s*(.+?)\s*["\u201c\u201d]?(?:奖|称号|荣誉)'
+      - '(.+?(?:竞赛|比赛|大赛|挑战赛|锦标赛))'
+    region: null
+    priority: 2
+
+  award_org:
+    patterns:
+      - '(?:主办[单方]?[位方]?|颁发[单方]?[位方]?|发证[单方]?[位方]?)[：:]\s*(.+)'
+      - '([\u4e00-\u9fa5]+(?:部|厅|局|委|会|协会|学会|联合会|中心))'
+    region:
+      x: 0.3
+      y: 0.75
+      w: 0.5
+      h: 0.25
+    priority: 3
+    location_hint: bottom
+
+  award_level:
+    patterns:
+      - '(特等奖|一等奖|二等奖|三等奖|优秀奖|金奖|银奖|铜奖)'
+      - '(第[一二三四五六七八九十]+名)'
+      - '(国家级|省级|市级|区级|校级)'
+      - '(冠军|亚军|季军)'
+    region: null
+    priority: 4
+
+  teachers:
+    patterns:
+      - '指导[老教]师[：:]\s*(.+?)(?:\n|$|指导|学生|选手)'
+      - '指导[老教]师\s+(.+?)(?:\n|$)'
+      - '辅导[老教]师[：:]\s*(.+?)(?:\n|$)'
+    region: null
+    priority: 5
+    separator: '[、,，\s]+'
+
+  students:
+    patterns:
+      - '(?:学生|选手|参赛者|获奖者|获奖学生)[：:]\s*(.+?)(?:\n|$)'
+      - '([\u4e00-\u9fa5]{2,4}(?:[、,，\s]+[\u4e00-\u9fa5]{2,4})*)\s*(?:等\s*)?同学'
+      - '([\u4e00-\u9fa5]{2,4}(?:[、,，\s]+[\u4e00-\u9fa5]{2,4})*)\s*(?:等\s*)?(?:学员|选手)'
+    region: null
+    priority: 6
+    separator: '[、,，\s]+'
+    name_hint: center_top
