@@ -18,12 +18,12 @@ export const useCertStore = defineStore('cert', () => {
     return res
   }
 
-  async function process(writeMode = 'overwrite') {
+  async function process(writeMode = 'overwrite', outputFilename = 'result_all') {
     if (!batchId.value) throw new Error('请先上传文件')
     processing.value = true
     try {
       const hasPrevious = results.value.length > 0
-      const res = await processBatch(batchId.value, writeMode, hasPrevious)
+      const res = await processBatch(batchId.value, writeMode, hasPrevious, outputFilename)
       results.value = res.results || []
       // 追加模式下 results 包含全部数据，stats 反映全部结果数量
       stats.value = {

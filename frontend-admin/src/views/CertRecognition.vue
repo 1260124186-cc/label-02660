@@ -81,6 +81,15 @@
               <el-radio value="append">追加写入</el-radio>
             </el-radio-group>
           </el-form-item>
+          <el-form-item label="输出文件名">
+            <el-input
+              v-model="form.outputFilename"
+              placeholder="请输入输出文件名"
+              style="max-width: 300px"
+            >
+              <template #append>.xlsx</template>
+            </el-input>
+          </el-form-item>
         </el-form>
       </div>
 
@@ -185,6 +194,7 @@ const folderFiles = ref([])
 
 const form = ref({
   writeMode: 'overwrite',
+  outputFilename: 'result_all',
 })
 
 const hasResults = computed(() => certStore.results.length > 0)
@@ -242,7 +252,7 @@ async function startProcess() {
 
     // 2. 处理
     ElMessage.info('正在识别证书，请耐心等待...')
-    const res = await certStore.process(form.value.writeMode)
+    const res = await certStore.process(form.value.writeMode, form.value.outputFilename)
 
     if (res.success > 0) {
       ElMessage.success(`识别完成！成功 ${res.success} 个，失败 ${res.failed} 个`)

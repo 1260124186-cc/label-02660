@@ -67,15 +67,18 @@ async def process_batch(
     batch_id: str = Form(...),
     write_mode: str = Form("overwrite"),
     has_previous: str = Form("false"),
+    output_filename: str = Form("result_all"),
 ):
     """处理已上传的证书批次"""
     batch_dir = os.path.join(UPLOAD_DIR, batch_id)
     if not os.path.isdir(batch_dir):
         raise HTTPException(status_code=404, detail=f"批次不存在: {batch_id}")
 
-    # 统一使用固定输出文件名
-    output_filename = "result_all.xlsx"
-    output_path = os.path.join(OUTPUT_DIR, output_filename)
+    # 安全处理文件名：去除路径分隔符，确保以 .xlsx 结尾
+    safe_name = os.path.basename(output_filename.strip() or "result_all")
+    if not safe_name.endswith(".xlsx"):
+        safe_name = safe_name + ".xlsx"
+    output_path = os.path.join(OUTPUT_DIR, safe_name)
 
     # 覆盖模式：先删除旧文件确保干净
     # 追加模式但前端无历史数据时（has_previous=false），也当覆盖处理
@@ -128,7 +131,7 @@ async def process_batch(
             "failed": result.failed,
             "results": all_results_data,
             "errors": result.errors,
-            "output_file": output_filename,
+            "output_file": safe_name,
         }
     except Exception as e:
         logger.error(f"处理失败: {e}")
