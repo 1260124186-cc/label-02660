@@ -10,7 +10,7 @@ services:
     ports:
       - "8083:8000"
     volumes:
-      - backend-output:/app/output
+      - ./output:/app/output
       - backend-upload:/app/upload
       - backend-logs:/app/logs
     environment:
@@ -35,6 +35,5 @@ services:
       - TZ=Asia/Shanghai
 
 volumes:
-  backend-output:
   backend-upload:
   backend-logs:

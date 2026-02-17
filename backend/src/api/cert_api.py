@@ -68,6 +68,7 @@ async def process_batch(
     write_mode: str = Form("overwrite"),
     has_previous: str = Form("false"),
     output_filename: str = Form("result_all"),
+    output_dir: str = Form(""),
 ):
     """处理已上传的证书批次"""
     batch_dir = os.path.join(UPLOAD_DIR, batch_id)
@@ -78,7 +79,23 @@ async def process_batch(
     safe_name = os.path.basename(output_filename.strip() or "result_all")
     if not safe_name.endswith(".xlsx"):
         safe_name = safe_name + ".xlsx"
-    output_path = os.path.join(OUTPUT_DIR, safe_name)
+
+    # 处理输出目录：清理路径，防止目录穿越
+    sub_dir = output_dir.strip().strip("/\\")
+    if sub_dir:
+        # 防止 .. 路径穿越
+        safe_parts = [p for p in sub_dir.replace("\\", "/").split("/") if p and p != ".."]
+        sub_dir = os.path.join(*safe_parts) if safe_parts else ""
+
+    if sub_dir:
+        actual_output_dir = os.path.join(OUTPUT_DIR, sub_dir)
+    else:
+        actual_output_dir = OUTPUT_DIR
+    os.makedirs(actual_output_dir, exist_ok=True)
+    output_path = os.path.join(actual_output_dir, safe_name)
+
+    # 用于返回和下载的相对路径
+    relative_path = os.path.join(sub_dir, safe_name) if sub_dir else safe_name
 
     # 覆盖模式：先删除旧文件确保干净
     # 追加模式但前端无历史数据时（has_previous=false），也当覆盖处理
@@ -131,23 +148,27 @@ async def process_batch(
             "failed": result.failed,
             "results": all_results_data,
             "errors": result.errors,
-            "output_file": safe_name,
+            "output_file": relative_path,
         }
     except Exception as e:
         logger.error(f"处理失败: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/download/{filename}")
-async def download_result(filename: str):
+@router.get("/download/{filepath:path}")
+async def download_result(filepath: str):
     """下载识别结果Excel"""
-    file_path = os.path.join(OUTPUT_DIR, filename)
+    # 安全处理：防止路径穿越
+    safe_path = os.path.normpath(filepath).lstrip(os.sep)
+    if ".." in safe_path.split(os.sep):
+        raise HTTPException(status_code=400, detail="非法路径")
+    file_path = os.path.join(OUTPUT_DIR, safe_path)
     if not os.path.isfile(file_path):
         raise HTTPException(status_code=404, detail="文件不存在")
     return FileResponse(
         file_path,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        filename=filename,
+        filename=os.path.basename(safe_path),
     )
 
 

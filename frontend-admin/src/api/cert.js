@@ -8,12 +8,13 @@ export function uploadFiles(files) {
   })
 }
 
-export function processBatch(batchId, writeMode = 'overwrite', hasPrevious = false, outputFilename = 'result_all') {
+export function processBatch(batchId, writeMode = 'overwrite', hasPrevious = false, outputFilename = 'result_all', outputDir = '') {
   const formData = new FormData()
   formData.append('batch_id', batchId)
   formData.append('write_mode', writeMode)
   formData.append('has_previous', hasPrevious ? 'true' : 'false')
   formData.append('output_filename', outputFilename)
+  formData.append('output_dir', outputDir)
   return request.post('/cert/process', formData)
 }
 

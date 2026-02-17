@@ -81,11 +81,23 @@
               <el-radio value="append">追加写入</el-radio>
             </el-radio-group>
           </el-form-item>
+          <el-form-item label="输出目录">
+            <div class="form-field-block">
+              <el-input
+                v-model="form.outputDir"
+                placeholder="留空使用默认目录，可输入子目录如: 2026/math"
+                style="width: 360px"
+              >
+                <template #prepend>output/</template>
+              </el-input>
+              <div class="form-tip">文件将保存到服务端 output/ 下对应子目录，可在项目 output/ 文件夹中查看</div>
+            </div>
+          </el-form-item>
           <el-form-item label="输出文件名">
             <el-input
               v-model="form.outputFilename"
               placeholder="请输入输出文件名"
-              style="max-width: 300px"
+              style="width: 360px"
             >
               <template #append>.xlsx</template>
             </el-input>
@@ -194,6 +206,7 @@ const folderFiles = ref([])
 
 const form = ref({
   writeMode: 'overwrite',
+  outputDir: '',
   outputFilename: 'result_all',
 })
 
@@ -252,7 +265,7 @@ async function startProcess() {
 
     // 2. 处理
     ElMessage.info('正在识别证书，请耐心等待...')
-    const res = await certStore.process(form.value.writeMode, form.value.outputFilename)
+    const res = await certStore.process(form.value.writeMode, form.value.outputFilename, form.value.outputDir)
 
     if (res.success > 0) {
       ElMessage.success(`识别完成！成功 ${res.success} 个，失败 ${res.failed} 个`)
@@ -325,6 +338,16 @@ function resetAll() {
     font-size: 12px;
     color: #64748b;
     padding: 2px 0;
+  }
+  .form-tip {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+  .form-field-block {
+    display: flex;
+    flex-direction: column;
   }
 }
 </style>
