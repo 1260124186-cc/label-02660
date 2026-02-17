@@ -65,6 +65,7 @@ label-02660/
 ├── docker-compose.yml              # Docker 编排
 ├── .gitignore
 ├── README.md
+├── output/                         # Excel 输出目录（Docker 绑定挂载）
 ├── docs/
 │   └── project_design.md           # 项目设计文档
 ├── backend/                        # 后端服务 (FastAPI + PaddleOCR)
@@ -134,5 +135,19 @@ label-02660/
 - 🔍 PaddleOCR 中文高精度识别引擎
 - 📋 YAML 模板系统：自动匹配、手动创建、交互式生成
 - 📊 自动提取：获奖时间、名称、单位、等级、指导老师、获奖学生
-- 📥 Excel 导出：支持覆盖/追加写入，带专业格式化
+- 📥 Excel 导出：支持自定义输出目录、自定义文件名、覆盖/追加写入
 - 🐳 Docker 一键部署，跨平台支持 ARM64 + AMD64
+
+## 输出说明
+
+识别完成后，Excel 文件会自动保存到项目根目录的 `output/` 文件夹中（通过 Docker 绑定挂载）。
+
+用户可在前端「输出设置」中配置：
+- **写入模式**：覆盖写入 / 追加写入
+- **输出目录**：指定 `output/` 下的子目录路径（如 `2026/math`），留空则保存到 `output/` 根目录
+- **输出文件名**：自定义 Excel 文件名，默认为 `result_all.xlsx`
+
+例如设置输出目录为 `2026/math`、文件名为 `result`，则文件保存到：
+```
+label-02660/output/2026/math/result.xlsx
+```
