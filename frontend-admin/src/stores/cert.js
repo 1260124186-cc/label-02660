@@ -25,9 +25,9 @@ export const useCertStore = defineStore('cert', () => {
       const hasPrevious = results.value.length > 0
       const res = await processBatch(batchId.value, writeMode, hasPrevious, outputFilename, outputDir)
       results.value = res.results || []
-      // 追加模式下 results 包含全部数据，stats 反映全部结果数量
+      // 直接使用后端返回的统计数据
       stats.value = {
-        total: results.value.length,
+        total: res.total,
         success: res.success,
         failed: res.failed,
       }

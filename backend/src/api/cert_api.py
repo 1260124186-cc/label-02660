@@ -141,15 +141,30 @@ async def process_batch(
             except Exception as e:
                 logger.warning(f"读取合并数据失败: {e}")
 
-        return {
-            "batch_id": batch_id,
-            "total": result.total,
-            "success": result.success,
-            "failed": result.failed,
-            "results": all_results_data,
-            "errors": result.errors,
-            "output_file": relative_path,
-        }
+        # 在追加模式下，使用实际返回的所有结果数量作为总统计
+        if actual_write_mode == "append":
+            total_count = len(all_results_data)
+            success_count = total_count  # 所有保存到Excel的都是成功的
+            return {
+                "batch_id": batch_id,
+                "total": total_count,
+                "success": success_count,
+                "failed": result.failed,
+                "results": all_results_data,
+                "errors": result.errors,
+                "output_file": relative_path,
+            }
+        else:
+            # 覆盖模式下使用本轮统计
+            return {
+                "batch_id": batch_id,
+                "total": result.total,
+                "success": result.success,
+                "failed": result.failed,
+                "results": all_results_data,
+                "errors": result.errors,
+                "output_file": relative_path,
+            }
     except Exception as e:
         logger.error(f"处理失败: {e}")
         raise HTTPException(status_code=500, detail=str(e))
