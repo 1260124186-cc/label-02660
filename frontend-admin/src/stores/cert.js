@@ -25,11 +25,19 @@ export const useCertStore = defineStore('cert', () => {
       const hasPrevious = results.value.length > 0
       const res = await processBatch(batchId.value, writeMode, hasPrevious, outputFilename, outputDir)
       results.value = res.results || []
-      // 追加模式下 results 包含全部数据，stats 反映全部结果数量
-      stats.value = {
-        total: results.value.length,
-        success: res.success,
-        failed: res.failed,
+      // 追加模式下，根据实际返回的所有结果计算统计数据
+      if (writeMode === 'append' && hasPrevious) {
+        stats.value = {
+          total: results.value.length,
+          success: results.value.length,
+          failed: res.failed,
+        }
+      } else {
+        stats.value = {
+          total: res.total,
+          success: res.success,
+          failed: res.failed,
+        }
       }
       errors.value = res.errors || []
       outputFile.value = res.output_file || ''
